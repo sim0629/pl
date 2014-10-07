@@ -8,13 +8,13 @@ open Hw3
 let main () =
     let print_code = ref false in
     let src = ref "" in
-    let spec = [("-pp", Arg.Set print_code, "ÀÔ·Â K- ÇÁ·Î±×·¥ Âï¾îº¸±â")] in
-    let usage = "»ç¿ë¹ı: run <options> <file> \n»ç¿ë °¡´ÉÇÑ ¿É¼Çµé: " in
+    let spec = [("-pp", Arg.Set print_code, "ì…ë ¥ K- í”„ë¡œê·¸ë¨ ì°ì–´ë³´ê¸°")] in
+    let usage = "ì‚¬ìš©ë²•: run <options> <file> \nì‚¬ìš© ê°€ëŠ¥í•œ ì˜µì…˜ë“¤: " in
     let _ = Arg.parse spec
                 (fun
                    x ->
                      if Sys.file_exists x then src := x
-                     else raise (Arg.Bad (x ^ ": ÆÄÀÏÀÌ ¾øÀ½")))
+                     else raise (Arg.Bad (x ^ ": íŒŒì¼ì´ ì—†ìŒ")))
                 usage
     in
     
@@ -25,14 +25,14 @@ let main () =
     	let pgm = Parser.program Lexer.start lexbuf in
 		try
        		if !print_code then (
-              print_endline "== ÀÔ·Â ÇÁ·Î±×·¥ ==";
+              print_endline "== ì…ë ¥ í”„ë¡œê·¸ë¨ ==";
               Kminus_PP.pp pgm
           	) else (
 				try
           		   (ignore (K.run (K.emptyMemory, K.emptyEnv, pgm)))
 				with
-                	K.Error s -> print_endline ("¿À·ù: " ^ s)
+                	K.Error s -> print_endline ("ì˜¤ë¥˜: " ^ s)
           )
-		with Lexer.LexicalError -> print_endline (!src ^ ": ¹®¹ı ¿À·ù")
+		with Lexer.LexicalError -> print_endline (!src ^ ": ë¬¸ë²• ì˜¤ë¥˜")
 
 let _ = main ()
