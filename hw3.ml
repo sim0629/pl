@@ -208,7 +208,118 @@ struct
   let rec semantics : memory -> env -> exp -> (value * memory) =
     fun mem env e -> match e with
     | NUM i -> (Num i, mem)
-    | _ -> raise (Error("not implemented")) (* implement it! *)
+    | TRUE -> (Bool true, mem)
+    | FALSE -> (Bool false, mem)
+    | UNIT -> (Unit, mem)
+    | VAR i -> (Mem.load mem (env_loc env i), mem)
+    | ADD (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      (Num ((value_int av) + (value_int bv)), bm)
+    | SUB (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      (Num ((value_int av) - (value_int bv)), bm)
+    | MUL (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      (Num ((value_int av) * (value_int bv)), bm)
+    | DIV (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      (Num ((value_int av) / (value_int bv)), bm)
+    | EQUAL (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      ((match (av, bv) with
+      | (Num an, Num bn) -> Bool (an = bn)
+      | (Bool ab, Bool bb) -> Bool (ab = bb)
+      | (Unit, Unit) -> Bool true
+      | _ -> Bool false), bm)
+    | LESS (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      let (bv, bm) = (semantics am env b) in
+      ((match (av, bv) with
+      | (Num an, Num bn) -> Bool (an < bn)
+      | _ -> raise (Error "LESS needs Nums")), bm)
+    | NOT a ->
+      let (av, am) = (semantics mem env a) in
+      (Bool (not (value_bool av)), am)
+    | SEQ (a, b) ->
+      let (av, am) = (semantics mem env a) in
+      semantics am env b
+    | IF (x, a, b) ->
+      let (xv, xm) = (semantics mem env x) in
+      if value_bool xv then
+        (semantics xm env a)
+      else
+        (semantics xm env b)
+    | WHILE (x, a) ->
+      let (xv, xm) = (semantics mem env x) in
+      if value_bool xv then
+        let (av, am) = (semantics xm env a) in
+        (semantics am env e)
+      else
+        (Unit, xm)
+    | LETV (i, a, x) ->
+      let (av, am) = (semantics mem env a) in
+      let (il, im) = Mem.alloc am in
+      semantics (Mem.store im il av) (Env.bind env i (Addr il)) x
+    | LETF (i, p, a, x) ->
+      semantics mem (Env.bind env i (Proc (p, a, env))) x
+    | CALLV (i, p) ->
+      let (fp, fa, fe) = env_proc env i in
+      let m = ref mem in
+      let e = ref fe in
+      List.iter2
+        (fun i x ->
+          let (xv, xm) = semantics !m env x in
+          let (il, im) = Mem.alloc xm in
+          m := Mem.store im il xv;
+          e := Env.bind !e i (Addr il)
+        )
+        fp p;
+      semantics !m (Env.bind !e i (Proc (fp, fa, fe))) fa
+    | CALLR (i, p) ->
+      let (fp, fa, fe) = env_proc env i in
+      let e = ref fe in
+      List.iter
+        (fun i ->
+          e := Env.bind !e i (Env.lookup env i)
+        )
+        p;
+      semantics mem (Env.bind !e i (Proc (fp, fa, fe))) fa
+    | RECORD [] ->
+      (Unit, mem)
+    | RECORD l ->
+      let r = ref (fun x -> raise (Error "no such field")) in
+      let m = ref mem in
+      List.iter
+        (fun (i, a) ->
+          let (av, am) = semantics !m env a in
+          let (il, im) = Mem.alloc am in
+          m := Mem.store im il av;
+          r := fun x -> if x = i then il else !r x
+        )
+        l;
+      (Record !r, !m)
+    | FIELD (x, i) ->
+      let (xv, xm) = semantics mem env x in
+      (Mem.load xm ((value_record xv) i), xm)
+    | ASSIGN (i, a) ->
+      let (av, am) = (semantics mem env a) in
+      (av, Mem.store am (env_loc env i) av)
+    | ASSIGNF (x, i, a) ->
+      let (xv, xm) = semantics mem env x in
+      let (av, am) = semantics xm env a in
+      (av, Mem.store am ((value_record xv) i) av)
+    | READ i ->
+      let a = read_int () in
+      (Num a, Mem.store mem (env_loc env i) (Num a))
+    | WRITE a ->
+      let (av, am) = semantics mem env a in
+      print_int (value_int av);
+      (av, am)
 
   let run (mem, env, pgm) =
     let (v,_) = semantics mem env pgm in
