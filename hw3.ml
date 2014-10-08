@@ -283,11 +283,11 @@ struct
     | CALLR (i, p) ->
       let (fp, fa, fe) = env_proc env i in
       let e = ref fe in
-      List.iter
-        (fun i ->
-          e := Env.bind !e i (Env.lookup env i)
+      List.iter2
+        (fun i j ->
+          e := Env.bind !e i (Env.lookup env j)
         )
-        p;
+        fp p;
       semantics mem (Env.bind !e i (Proc (fp, fa, fe))) fa
     | RECORD [] ->
       (Unit, mem)
