@@ -271,6 +271,9 @@ struct
       let (fp, fa, fe) = env_proc env i in
       let m = ref mem in
       let e = ref fe in
+      if (List.length fp) != (List.length p) then
+        raise (Error "Invalid_argument")
+      else ();
       List.iter2
         (fun i x ->
           let (xv, xm) = semantics !m env x in
@@ -283,6 +286,9 @@ struct
     | CALLR (i, p) ->
       let (fp, fa, fe) = env_proc env i in
       let e = ref fe in
+      if (List.length fp) != (List.length p) then
+        raise (Error "Invalid_argument")
+      else ();
       List.iter2
         (fun i j ->
           e := Env.bind !e i (Env.lookup env j)
