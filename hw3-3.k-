@@ -1,0 +1,76 @@
+(* hw3-3 *)
+
+(* tree *)
+let proc leaf(n) = { v := n, l := unit, r := unit } in
+let proc makeLtree(n, t) = { v := n, l := t, r := unit } in
+let proc makeRtree(n, t) = { v := n, l := unit, r := t } in
+let proc makeTree(n, tl, tr) = { v := n, l := tl, r := tr } in
+let proc isEmpty(t) = t = unit in
+let proc lTree(t) = t.l in
+let proc rTree(t) = t.r in
+let proc nodeVal(t) = t.v in
+
+(* depth first *)
+let proc dft(t) =
+  write nodeVal(t);
+  let l := lTree(t) in
+  if isEmpty(l) then unit
+  else (
+    dft<l>;
+    let r := rTree(t) in
+    if isEmpty(r) then unit
+    else dft<r>
+  )
+in
+
+(* stack *)
+let stack_empty := unit in
+let proc stack_isEmpty(s) = s = stack_empty in
+let proc stack_push(s, e) = { h := e, t := s } in
+let proc stack_pop(s) = { e := s.h, s := s.t } in
+
+(* queue *)
+let queue_empty := { l := stack_empty, r := stack_empty } in
+let proc queue_isEmpty(q) =
+  if stack_isEmpty(q.l) then
+    if stack_isEmpty(q.r) then true
+    else false
+  else false
+in
+let proc queue_en(q, e) =
+  { l := stack_push(q.l, e), r := q.r }
+in
+let proc queue_de(q) =
+  let r := q.r in
+  let l := q.l in
+  if stack_isEmpty(r) then (
+    while (not stack_isEmpty(l)) do (
+      let pop := stack_pop(l) in
+      r := stack_push(r, pop.e);
+      l := pop.s
+    )
+  )else (
+    unit
+  );
+  let pop := stack_pop(r) in
+  { e := pop.e, q := { l := l, r := pop.s } }
+in
+
+(* breadth first *)
+let proc bft(t) =
+  let q := queue_empty in
+  if isEmpty(t) then unit
+  else q := queue_en(q, t);
+  while (not queue_isEmpty(q)) do (
+    let de := queue_de(q) in
+    let t := de.e in
+    q := de.q;
+    write nodeVal(t);
+    let l := lTree(t) in
+    if isEmpty(l) then unit
+    else q := queue_en(q, l);
+    let r := rTree(t) in
+    if isEmpty(r) then unit
+    else q := queue_en(q, r)
+  )
+in
