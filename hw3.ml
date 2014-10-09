@@ -299,7 +299,8 @@ struct
           let (av, am) = semantics !m env a in
           let (il, im) = Mem.alloc am in
           m := Mem.store im il av;
-          r := fun x -> if x = i then il else !r x
+          let rr = !r in
+          r := fun x -> if x = i then il else rr x
         )
         l;
       (Record !r, !m)
