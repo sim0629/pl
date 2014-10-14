@@ -15,12 +15,10 @@ let proc dft(t) =
   write nodeVal(t);
   let l := lTree(t) in
   if isEmpty(l) then unit
-  else (
-    dft<l>;
-    let r := rTree(t) in
-    if isEmpty(r) then unit
-    else dft<r>
-  )
+  else dft(l);
+  let r := rTree(t) in
+  if isEmpty(r) then unit
+  else dft(r)
 in
 
 (* stack *)
