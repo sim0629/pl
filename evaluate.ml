@@ -60,9 +60,12 @@ struct
     | Lambda.App ((Lambda.Lam (name, target), source)) ->
       reduce_simple (replace name target source)
     | Lambda.App (left, right) ->
-      let fxp = Lambda.App (reduce_simple left, reduce_simple right) in
-      if exp = fxp then fxp
-      else reduce_simple fxp
+      let lxp = reduce_simple left in
+      if left = lxp then
+        let rxp = reduce_simple right in
+        if right = rxp then exp
+        else reduce_simple (Lambda.App (lxp, rxp))
+      else reduce_simple (Lambda.App (lxp, right))
     | Lambda.Lam (name, exp) ->
       Lambda.Lam (name, reduce_simple exp)
     | _ -> exp
