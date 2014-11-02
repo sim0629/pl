@@ -8,21 +8,37 @@ module Evaluator =
 struct
   exception Error of string
 
+  let rec all_names exp =
+    match exp with
+    | Lambda.Id x -> [x]
+    | Lambda.Lam (x, e) -> x::(all_names e)
+    | Lambda.App (l, r) -> List.rev_append (all_names l) (all_names r)
+
   let rename exp =
     let n = ref 0 in
+    let names = all_names exp in
+    let next_name () =
+      let m = !n in
+      n := m + 1;
+      "s" ^ (string_of_int m)
+    in
+    let rec next_unique_name () =
+      let name = next_name () in
+      if List.mem name names then next_unique_name ()
+      else name
+    in
     let rec rename_in exp env =
       match exp with
       | Lambda.Id x -> (
-        let n = env x in
-        match n with
+        let sname = env x in
+        match sname with
         | None -> exp
-        | Some i -> Lambda.Id (string_of_int i)
+        | Some name -> Lambda.Id name
       )
       | Lambda.Lam (x, e) -> (
-        let m = !n in
-        n := m + 1;
-        let env = fun y -> if y = x then Some m else env y in
-        Lambda.Lam (string_of_int m, rename_in e env)
+        let name = next_unique_name () in
+        let env = fun y -> if y = x then Some name else env y in
+        Lambda.Lam (name, rename_in e env)
       )
       | Lambda.App (l, r) -> (
         Lambda.App (rename_in l env, rename_in r env)
