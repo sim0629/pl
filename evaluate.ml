@@ -5,10 +5,10 @@
  *)
 
 module Evaluator =
-  struct
-	exception Error of string
- 
-	let reduce : Lambda.lexp -> Lambda.lexp
-	= fun exp -> raise (Error "not implemented")
+struct
+  exception Error of string
 
-  end
+  let reduce : Lambda.lexp -> Lambda.lexp
+  = fun exp -> raise (Error "not implemented")
+
+end
