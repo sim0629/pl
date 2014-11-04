@@ -8,9 +8,9 @@ open Sm5
 module Translator = struct
 
 let rec trans : K.program -> Sm5.command
-= fun pgm -> 
+= fun pgm ->
   match pgm with
-    | K.NUM n -> Sm5.empty_command (* Implement this. *)
-    | _ -> Sm5.empty_command
+  | K.NUM n -> Sm5.empty_command (* Implement this. *)
+  | _ -> Sm5.empty_command
 
 end
