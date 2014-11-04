@@ -55,20 +55,28 @@ struct
     | Lambda.App (l, r) ->
       Lambda.App (replace name l source, replace name r source)
 
-  let rec reduce_simple exp =
+  let rec reduce_once exp =
     match exp with
     | Lambda.App ((Lambda.Lam (name, target), source)) ->
-      reduce_simple (replace name target source)
+      (replace name target source, true)
     | Lambda.App (left, right) ->
-      let lxp = reduce_simple left in
-      if left = lxp then
-        let rxp = reduce_simple right in
-        if right = rxp then exp
-        else reduce_simple (Lambda.App (lxp, rxp))
-      else reduce_simple (Lambda.App (lxp, right))
+      let (lxp, apped) = reduce_once left in
+      if apped then
+        (Lambda.App (lxp, right), apped)
+      else
+        let (rxp, apped) = reduce_once right in
+        (Lambda.App (lxp, rxp), apped)
     | Lambda.Lam (name, exp) ->
-      Lambda.Lam (name, reduce_simple exp)
-    | _ -> exp
+      let (fxp, apped) = reduce_once exp in
+      (Lambda.Lam (name, fxp), apped)
+    | _ -> (exp, false)
+
+  let rec reduce_simple exp =
+    let (fxp, apped) = reduce_once exp in
+    if fxp = exp then
+      exp
+    else
+      reduce_simple fxp
 
   let reduce : Lambda.lexp -> Lambda.lexp
   = fun exp -> reduce_simple (rename exp)
