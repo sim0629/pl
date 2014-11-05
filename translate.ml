@@ -225,7 +225,15 @@ let rec trans : K.program -> Sm5.command
   | K.LETF (f, x, e, es) ->
     tail_concat [
       [
-        Sm5.PUSH (Sm5.Fn (x, trans e));
+        Sm5.PUSH (
+          Sm5.Fn (
+            x,
+            tail_concat [
+              [Sm5.BIND f];
+              (trans e);
+            ]
+          )
+        );
         Sm5.BIND f;
       ];
       (trans es);
@@ -236,7 +244,10 @@ let rec trans : K.program -> Sm5.command
     ]
   | K.CALLV (f, e) ->
     tail_concat [
-      [Sm5.PUSH (Sm5.Id f)];
+      [
+        Sm5.PUSH (Sm5.Id f);
+        Sm5.PUSH (Sm5.Id f);
+      ];
       (trans e);
       [
         Sm5.MALLOC;
@@ -245,6 +256,7 @@ let rec trans : K.program -> Sm5.command
     ]
   | K.CALLR (f, x) ->
     [
+      Sm5.PUSH (Sm5.Id f);
       Sm5.PUSH (Sm5.Id f);
       Sm5.PUSH (Sm5.Id x);
       Sm5.LOAD;
