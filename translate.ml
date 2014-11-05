@@ -265,6 +265,7 @@ let rec trans : K.program -> Sm5.command
       [
         Sm5.BIND "0";
         Sm5.PUSH (Sm5.Id "0");
+        Sm5.PUSH (Sm5.Id "0");
         Sm5.UNBIND;
         Sm5.POP;
         Sm5.PUT;
