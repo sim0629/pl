@@ -1,0 +1,28 @@
+write (
+let a := 4 in
+let a := a+3 in
+a );
+
+(
+let s := 0 in
+let i := 0 in
+for i := 0 to 100 do (
+        for i := i to 100 do (
+                s := s + i
+        )
+);
+write s
+);
+
+let k := 0 in
+let z := 0 in
+for z := 1 to 100 do (
+    z := z + z;
+    k := k + z
+);
+write k
+(*
+7
+343400
+10100
+*)
