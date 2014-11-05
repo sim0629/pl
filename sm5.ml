@@ -117,8 +117,13 @@ struct
     print_flush()
     
   let loccount = ref 0
+  let full () = !loccount >= 128
       (* create new loc *)
-  let newl () = loccount := !loccount + 1; (!loccount,0)
+  let newl () =
+    if full () then raise GC_Failure
+    else loccount := !loccount + 1; (!loccount,0)
+
+  let gc (s, m, e, c, k) = (s, m, e, c, k)
 
   let rec eval (s,m,e,c,k) = 
 	eval(
@@ -138,7 +143,12 @@ struct
 			let (l1, l2) = l in raise (Unbound_loc (l1, l2)))
      | (V(B b)::s,_,_,JTR(c1,c2)::c,_) -> 
          (s, m, e, (if b then c1@c else (c2@c)), k)
-     | (_,_,_,MALLOC::c,_) -> (V(L(newl()))::s, m, e, c, k)
+     | (_,_,_,MALLOC::c,_) ->
+        if full () then
+          let (s, m, e, c, k) = gc (s, m, e, c, k) in
+          (V(L(newl()))::s, m, e, c, k)
+        else
+          (V(L(newl()))::s, m, e, c, k)
      | (_,_,_,BOX z::c,_) ->
         let rec box b i s =
 			if i = 0 then V (R b)::s
