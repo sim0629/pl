@@ -69,6 +69,8 @@ let rec trans : K.program -> Sm5.command
       [
         Sm5.PUSH (Sm5.Id x);
         Sm5.STORE;
+        Sm5.PUSH (Sm5.Id x);
+        Sm5.LOAD;
       ];
     ]
   | K.SEQ (e1, e2) ->
