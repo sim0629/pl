@@ -200,34 +200,28 @@ struct
     let rec replace_v =
       fun v -> match v with
       | L x -> L (reachables_to x)
-      | R x -> R (replace_e x [])
+      | R x -> R (replace_e x)
       | _ -> v
     and replace_si =
       fun si -> match si with
       | V v -> V (replace_v v)
-      | P (p1, p2, e) -> P (p1, p2, replace_e e [])
+      | P (p1, p2, e) -> P (p1, p2, replace_e e)
       | M (m1, si) -> M (m1, replace_si si)
     and replace_s =
-      fun s l -> match s with
-      | [] -> l
-      | si::st -> replace_s st ((replace_si si)::l)
+      fun s -> List.rev (List.rev_map (fun si -> replace_si si) s)
     and replace_ei =
       fun ei -> match ei with
       | (ei1, si) -> (ei1, replace_si si)
     and replace_e =
-      fun e l -> match e with
-      | [] -> l
-      | ei::et -> replace_e et ((replace_ei ei)::l)
+      fun e -> List.rev (List.rev_map (fun ei -> replace_ei ei) e)
     and replace_ki =
       fun ki -> match ki with
-      | (ki1, e) -> (ki1, replace_e e [])
+      | (ki1, e) -> (ki1, replace_e e)
     and replace_k =
-      fun k l -> match k with
-      | [] -> l
-      | ki::kt -> replace_k kt ((replace_ki ki)::l)
+      fun k -> List.rev (List.rev_map (fun ki -> replace_ki ki) k)
     in
     (
-      replace_s s [],
+      replace_s s,
       List.map
         (
           fun (x, v) ->
@@ -238,9 +232,9 @@ struct
             (fun mi -> List.mem (fst mi) reachables)
             m
         ),
-        replace_e e [],
+        replace_e e,
       c,
-      replace_k k []
+      replace_k k
     )
 
   let rec eval (s,m,e,c,k) = 
