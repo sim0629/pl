@@ -21,7 +21,7 @@ let rec trans : K.program -> Sm5.command
   | K.TRUE -> [Sm5.PUSH (Sm5.Val (Sm5.B true))]
   | K.FALSE -> [Sm5.PUSH (Sm5.Val (Sm5.B false))]
   | K.UNIT -> [Sm5.PUSH (Sm5.Val Sm5.Unit)]
-  | K.VAR x -> [Sm5.PUSH (Sm5.Id x)]
+  | K.VAR x -> [Sm5.PUSH (Sm5.Id x); Sm5.LOAD]
   | K.ADD (e1, e2) ->
     tail_concat [
       (trans e1);
