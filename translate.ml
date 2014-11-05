@@ -90,6 +90,7 @@ let rec trans : K.program -> Sm5.command
         Sm5.Fn (
           "0v",
           tail_concat [
+            [Sm5.BIND "0f"];
             (trans ec);
             [
               Sm5.JTR (
@@ -98,12 +99,19 @@ let rec trans : K.program -> Sm5.command
                   [
                     Sm5.POP;
                     Sm5.PUSH (Sm5.Id "0f");
+                    Sm5.PUSH (Sm5.Id "0f");
+                    Sm5.UNBIND;
+                    Sm5.POP;
                     Sm5.PUSH (Sm5.Val Sm5.Unit);
                     Sm5.PUSH (Sm5.Id "0v");
                     Sm5.CALL;
                   ]
                 ],
-                [Sm5.PUSH (Sm5.Val Sm5.Unit)]
+                [
+                  Sm5.UNBIND;
+                  Sm5.POP;
+                  Sm5.PUSH (Sm5.Val Sm5.Unit);
+                ]
               )
             ]
           ]
@@ -111,6 +119,9 @@ let rec trans : K.program -> Sm5.command
       );
       Sm5.BIND "0f";
       Sm5.PUSH (Sm5.Id "0f");
+      Sm5.PUSH (Sm5.Id "0f");
+      Sm5.UNBIND;
+      Sm5.POP;
       Sm5.PUSH (Sm5.Val Sm5.Unit);
       Sm5.PUSH (Sm5.Id "0v");
       Sm5.CALL;
@@ -134,6 +145,7 @@ let rec trans : K.program -> Sm5.command
           Sm5.Fn (
             x,
             [
+              Sm5.BIND "0f";
               Sm5.BIND "1";
               Sm5.BIND "2";
               Sm5.PUSH (Sm5.Id "2");
@@ -147,6 +159,8 @@ let rec trans : K.program -> Sm5.command
               Sm5.LESS;
               Sm5.JTR (
                 [
+                  Sm5.UNBIND;
+                  Sm5.POP;
                   Sm5.POP;
                   Sm5.POP;
                   Sm5.PUSH (Sm5.Val Sm5.Unit);
@@ -167,7 +181,11 @@ let rec trans : K.program -> Sm5.command
                     Sm5.PUSH (Sm5.Val (Sm5.Z 1));
                     Sm5.ADD;
                     Sm5.PUSH (Sm5.Id "0f");
-                    Sm5.PUSH (Sm5.Val Sm5.Unit);
+                    Sm5.PUSH (Sm5.Id "0f");
+                    Sm5.UNBIND;
+                    Sm5.POP;
+                    Sm5.PUSH (Sm5.Id x);
+                    Sm5.LOAD;
                     Sm5.PUSH (Sm5.Id x);
                     Sm5.CALL;
                   ];
@@ -178,11 +196,13 @@ let rec trans : K.program -> Sm5.command
         );
         Sm5.BIND "0f";
         Sm5.PUSH (Sm5.Id "0f");
-        Sm5.PUSH (Sm5.Val Sm5.Unit);
-        Sm5.PUSH (Sm5.Id x);
-        Sm5.CALL;
+        Sm5.PUSH (Sm5.Id "0f");
         Sm5.UNBIND;
         Sm5.POP;
+        Sm5.PUSH (Sm5.Id x);
+        Sm5.LOAD;
+        Sm5.PUSH (Sm5.Id x);
+        Sm5.CALL;
       ]
     ]
   | K.LETV (x, e, es) ->
