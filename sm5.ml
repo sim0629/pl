@@ -123,7 +123,125 @@ struct
     if full () then raise GC_Failure
     else loccount := !loccount + 1; (!loccount,0)
 
-  let gc (s, m, e, c, k) = (s, m, e, c, k)
+  let unique k =
+    let rec uni k l =
+      match k with
+      | [] -> l
+      | h::t -> (
+        let p = List.hd l in
+        if p = h then
+          uni t l
+        else
+          uni t (h::l)
+      )
+    in
+    let k = List.sort compare k in
+    match k with
+    | [] -> []
+    | h::t -> List.rev(uni t [h])
+
+  let gc (s, m, e, c, k) =
+    let rec collect_v =
+      fun v l -> match v with
+      | L x -> x::l
+      | R x -> collect_e x l
+      | _ -> l
+    and collect_si =
+      fun si l -> match si with
+      | V v -> collect_v v l
+      | P (_, _, e) -> collect_e e l
+      | M (_, si) -> collect_si si l
+    and collect_s =
+      fun s l -> match s with
+      | [] -> l
+      | si::st -> collect_s st (collect_si si l)
+    and collect_ei =
+      fun ei l -> match ei with
+      | (_, si) -> collect_si si l
+    and collect_e =
+      fun e l -> match e with
+      | [] -> l
+      | ei::et -> collect_e et (collect_ei ei l)
+    and collect_ki =
+      fun ki l -> match ki with
+      | (_, e) -> collect_e e l
+    and collect_k =
+      fun k l -> match k with
+      | [] -> l
+      | ki::kt -> collect_k kt (collect_ki ki l)
+    in
+    let reachables =
+      unique
+        (collect_k k (collect_e e (collect_s s [])))
+    in
+    let rec collect_mi =
+      fun mi l -> match mi with
+      | (x, v) ->
+        if List.mem x reachables then collect_v v l
+        else l
+    and collect_m =
+      fun m l -> match m with
+      | [] -> l
+      | mi::mt -> collect_m mt (collect_mi mi l)
+    in
+    let reachables =
+      unique
+        (collect_m m reachables)
+    in
+    loccount := 0;
+    let reachables_map =
+      List.mapi
+        (fun i r -> (r, newl ()))
+        reachables
+    in
+    let reachables_to r =
+      snd (List.find (fun x -> fst x = r) reachables_map)
+    in
+    let rec replace_v =
+      fun v -> match v with
+      | L x -> L (reachables_to x)
+      | R x -> R (replace_e x [])
+      | _ -> v
+    and replace_si =
+      fun si -> match si with
+      | V v -> V (replace_v v)
+      | P (p1, p2, e) -> P (p1, p2, replace_e e [])
+      | M (m1, si) -> M (m1, replace_si si)
+    and replace_s =
+      fun s l -> match s with
+      | [] -> l
+      | si::st -> replace_s st ((replace_si si)::l)
+    and replace_ei =
+      fun ei -> match ei with
+      | (ei1, si) -> (ei1, replace_si si)
+    and replace_e =
+      fun e l -> match e with
+      | [] -> l
+      | ei::et -> replace_e et ((replace_ei ei)::l)
+    and replace_ki =
+      fun ki -> match ki with
+      | (ki1, e) -> (ki1, replace_e e [])
+    and replace_k =
+      fun k l -> match k with
+      | [] -> l
+      | ki::kt -> replace_k kt ((replace_ki ki)::l)
+    in
+    (
+      replace_s s [],
+      List.map
+        (
+          fun (x, v) ->
+            (reachables_to x, replace_v v)
+        )
+        (
+          List.filter
+            (fun mi -> List.mem (fst mi) reachables)
+            m
+        ),
+        replace_e e [],
+      c,
+      replace_k k []
+    )
 
   let rec eval (s,m,e,c,k) = 
 	eval(
