@@ -1,0 +1,58 @@
+SNU 4190.310 Programming Languages 
+
+Rozetta
+
+컴파일 및 실행 방법
+===================
+ sm5.ml에는 sm5 모듈, sonata.ml에는 sonata 모듈이 정의되어 있고, k.ml에는 K-- 인터프리터가 구현되어 있습니다. 
+ 우선, 여러분이 K-- 프로그램을 SM5 프로그램으로 번역하는 과제에서 작성한 translate.ml로 translate_k.ml 파일을 덮어쓰셔야 합니다.
+
+ [UNIX]
+  1. (translate_k.ml 파일을 덮어쓰기)
+  2. make
+  3. ./run -sonata examples/test.k--
+
+ [WINDOWS]
+  
+  1. (translate_k.ml 파일을 덮어쓰기)
+  2. make.bat
+  3. run.exe -sonata examples\test.k--
+
+ 위의 실행 결과를 K-- 실행기로 실행한 결과, 혹은 Sm5로 실행한 결과와 비교하여 Rozetta.trans가 제대로 정의되었는지 확인할 수 있습니다.
+ './run -k examples/test.k--' 라고 입력하면 K-- 실행기를 사용하여 입력프로그램을 실행합니다.
+ './run -sm5 examples/test.k--' 라고 입력하면, Sm5 실행기를 사용하여 입력프로그램을 실행합니다. 
+   -->  (정확히는, K-- 프로그램을 받아서, 여러분이 덮어쓴 translate_k.ml 파일에 정의된 Trnaslator.trans 함수를 통해 SM5로 번역한 뒤, Sm5 실행기로 실행하는 것입니다.)
+
+
+
+ K-- 에서 SM5로 번역하는 과제를 하지 않은 경우, main.ml 파일에서 SM5 command를 직접 정의하고 테스트해 볼 수 있습니다. Rozetta.trans 함수로 번역한 뒤 Sonata 실행기로 실행해줄 것입니다.
+
+ [UNIX]
+  1. (main.ml 끝부분의 let sm5_pgm = ... 부분을 원하는 대로 수정)
+  2. make
+  3. ./run
+
+ [WINDOWS]
+  1. (main.ml 끝부분의 let sm5_pgm = ... 부분을 원하는 대로 수정)
+  2. make.bat
+  3. run.exe 
+
+
+숙제 제출 방법
+==============
+ rozetta.ml 파일에 있는 Rozetta.trans 함수를 완성하시고 그 파일만 제출해 주세요.
+
+
+--
+최웅식 <wschoi@ropas.kaist.ac.kr>
+신재호 <netj@ropas.snu.ac.kr>
+김덕환 <dk@ropas.snu.ac.kr>
+오학주 <pronto@ropas.snu.ac.kr>
+박대준 <pudrife@ropas.snu.ac.kr>
+이희종 <ihji@ropas.snu.ac.kr>
+정영범 <dreameye@ropas.snu.ac.kr>
+오학주 <pronto@ropas.snu.ac.kr>
+허기홍 <khheo@ropas.snu.ac.kr>
+조성근 <skcho@ropas.snu.ac.kr>
+윤용호 <yhyoon@ropas.snu.ac.kr>
+김진영 <jykim@ropas.snu.ac.kr>
