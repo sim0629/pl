@@ -201,10 +201,13 @@ let rec trans : K.program -> Sm5.command
         Sm5.PUSH (Sm5.Id "0f");
         Sm5.UNBIND;
         Sm5.POP;
-        Sm5.PUSH (Sm5.Id x);
-        Sm5.LOAD;
-        Sm5.PUSH (Sm5.Id x);
+        Sm5.MALLOC;
+        Sm5.BIND "0v";
+        Sm5.PUSH (Sm5.Val Sm5.Unit);
+        Sm5.PUSH (Sm5.Id "0v");
         Sm5.CALL;
+        Sm5.UNBIND;
+        Sm5.POP;
       ]
     ]
   | K.LETV (x, e, es) ->
