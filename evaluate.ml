@@ -72,13 +72,13 @@ struct
     | _ -> (exp, false)
 
   let rec reduce_simple exp =
-    let (fxp, apped) = reduce_once exp in
-    if fxp = exp then
-      exp
-    else
+    let (fxp, apped) = reduce_once (rename exp) in
+    if apped then
       reduce_simple fxp
+    else
+      fxp
 
   let reduce : Lambda.lexp -> Lambda.lexp
-  = fun exp -> reduce_simple (rename exp)
+  = fun exp -> reduce_simple exp
 
 end
