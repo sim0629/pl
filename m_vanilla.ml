@@ -112,6 +112,10 @@ module M_Vanilla : M_Runner = struct
      | SEQ (e1, e2) ->
        let (v1, m1) = eval env mem e1 in
        (eval env m1 e2)
+     | PAIR (e1, e2) ->
+       let (v1, m1) = eval env mem e1 in
+       let (v2, m2) = eval env m1 e2 in
+       (Pair (v1, v2), m2)
      | _ -> (* TODO: implementation *)
        raise (RuntimeError "not implemented")
 
