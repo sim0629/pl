@@ -45,8 +45,14 @@ module M_Vanilla : M_Runner = struct
            | SUB -> (fun (v1,v2) -> Num (getNum v1 - getNum v2))
            | AND -> (fun (v1,v2) -> Bool (getBool v1 && getBool v2))
            | OR ->  (fun (v1,v2) -> Bool (getBool v1 || getBool v2))
-           | EQ ->  (* TODO: implementation *)
-             raise (RuntimeError "not implemented")
+           | EQ ->  (fun (v1,v2) ->
+              match (v1, v2) with
+              | (Num n1, Num n2) -> Bool (n1 = n2)
+              | (Bool b1, Bool b2) -> Bool (b1 = b2)
+              | (String s1, String s2) -> Bool (s2 = s2)
+              | (Loc l1, Loc l2) -> Bool (l1 = l2)
+              | _ -> error "EQ type mismatch"
+           )
 
   let rec printValue =
     function Num n -> print_int n; print_newline()
