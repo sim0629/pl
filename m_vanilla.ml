@@ -116,6 +116,12 @@ module M_Vanilla : M_Runner = struct
        let (v1, m1) = eval env mem e1 in
        let (v2, m2) = eval env m1 e2 in
        (Pair (v1, v2), m2)
+     | SEL1 e ->
+       let (v, m') = eval env mem e in
+       (fst (getPair v), m')
+     | SEL2 e ->
+       let (v, m') = eval env mem e in
+       (snd (getPair v), m')
      | _ -> (* TODO: implementation *)
        raise (RuntimeError "not implemented")
 
