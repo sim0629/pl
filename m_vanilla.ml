@@ -80,8 +80,11 @@ module M_Vanilla : M_Runner = struct
      | LET (REC (f, e1), e2) ->
        let (v1, m') = eval env mem e1 in
        let (c, env') = getClosure v1 in
-       (* TODO: implementation *)
-       raise (RuntimeError "not implemented")
+       (
+         match c with
+         | Fun (x, e) -> eval (env @+ (f, Closure (RecFun (f, x, e), env'))) m' e2
+         | _ -> error "LET REC needs Fun not RecFun"
+       )
      | IF (e1, e2, e3) ->
        let (v1, m') = eval env mem e1 in
        eval env m' (if getBool v1 then e2 else e3)
