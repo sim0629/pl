@@ -102,6 +102,10 @@ module M_Vanilla : M_Runner = struct
        let (v, m') = eval env mem e in
        let (l, m'') = malloc m' in
        (Loc l, store m'' (l,v))
+     | ASSIGN (e1, e2) ->
+       let (l, m') = eval env mem e1 in
+       let (v, m'') = eval env m' e2 in
+       (v, store m'' ((getLoc l), v))
      | _ -> (* TODO: implementation *)
        raise (RuntimeError "not implemented")
 
