@@ -109,6 +109,9 @@ module M_Vanilla : M_Runner = struct
      | BANG e ->
        let (l, m') = eval env mem e in
        (fetch m' (getLoc l), m')
+     | SEQ (e1, e2) ->
+       let (v1, m1) = eval env mem e1 in
+       (eval env m1 e2)
      | _ -> (* TODO: implementation *)
        raise (RuntimeError "not implemented")
 
