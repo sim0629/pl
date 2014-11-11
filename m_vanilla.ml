@@ -122,8 +122,6 @@ module M_Vanilla : M_Runner = struct
      | SEL2 e ->
        let (v, m') = eval env mem e in
        (snd (getPair v), m')
-     | _ -> (* TODO: implementation *)
-       raise (RuntimeError "not implemented")
 
   let emptyEnv = (fun x -> error ("unknown id: " ^ x))
   let emptyMem = (0, fun l -> error ("unknown loc: " ^ string_of_int l))
