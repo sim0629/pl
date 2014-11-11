@@ -69,9 +69,12 @@ module M_Vanilla : M_Runner = struct
        let (v1, m') = eval env mem e1 in
        let (c, env') = getClosure v1 in
        let (v2, m'') = eval env m' e2 in
-       (match c with Fun (x, e) -> eval (env' @+ (x,v2)) m'' e
-     | RecFun (f, x, e) -> (* TODO: implementation *)
-       raise (RuntimeError "not implemented"))
+       (
+         match c with
+         | Fun (x, e) -> eval (env' @+ (x,v2)) m'' e
+         | RecFun (f, x, e) -> (* TODO: implementation *)
+           raise (RuntimeError "not implemented")
+       )
      | LET (NREC (x, e1), e2) ->
        let (v1, m') = eval env mem e1 in
        eval (env @+ (x,v1)) m' e2
