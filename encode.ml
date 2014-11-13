@@ -51,7 +51,7 @@ struct
   let f =
     Lambda.Lam ("x",
       Lambda.Lam ("y",
-        Lambda.Id "x"
+        Lambda.Id "y"
       )
     )
 
