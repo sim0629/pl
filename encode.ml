@@ -131,6 +131,19 @@ struct
       )
     )
 
+  let ands =
+    Lambda.Lam ("p",
+      Lambda.Lam ("q",
+        Lambda.App (
+          Lambda.App (
+            Lambda.Id "p",
+            Lambda.Id "q"
+          ),
+          Lambda.Id "p"
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
@@ -175,6 +188,14 @@ struct
           Lambda.Id "m"
         )
       )
+    )
+  | M.And (e1, e2) ->
+    Lambda.App (
+      Lambda.App (
+        ands,
+        encode e1
+      ),
+      encode e2
     )
   | _ -> raise (Error "not implemented") (* Implement this *)
 
