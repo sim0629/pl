@@ -9,6 +9,7 @@ struct
   exception Error of string
 
   let encode : M.mexp -> Lambda.lexp
-  = fun pgm -> raise (Error "not implemented") (* Implement this *)
+  = fun pgm -> match pgm with
+  | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
