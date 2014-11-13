@@ -66,6 +66,17 @@ struct
       )
     )
 
+  let isnz =
+    Lambda.Lam ("n",
+      Lambda.App (
+        Lambda.App (
+          Lambda.Id "n",
+          Lambda.Lam ("x", t)
+        ),
+        f
+      )
+    )
+
   let ifs =
     Lambda.Lam ("p",
       Lambda.Lam ("a",
@@ -226,9 +237,15 @@ struct
     Lambda.App (
       Lambda.App (
         ands,
-        encode e1
+        Lambda.App (
+          isnz,
+          encode e1
+        )
       ),
-      encode e2
+      Lambda.App (
+        isnz,
+        encode e2
+      )
     )
   | M.Pair (el, er) ->
     Lambda.App (
