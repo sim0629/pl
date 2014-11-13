@@ -144,6 +144,21 @@ struct
       )
     )
 
+  let pair =
+    Lambda.Lam ("x",
+      Lambda.Lam ("y",
+        Lambda.Lam ("f",
+          Lambda.App (
+            Lambda.App (
+              Lambda.Id "f",
+              Lambda.Id "x"
+            ),
+            Lambda.Id "y"
+          )
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
@@ -196,6 +211,14 @@ struct
         encode e1
       ),
       encode e2
+    )
+  | M.Pair (el, er) ->
+    Lambda.App (
+      Lambda.App (
+        pair,
+        encode el
+      ),
+      encode er
     )
   | _ -> raise (Error "not implemented") (* Implement this *)
 
