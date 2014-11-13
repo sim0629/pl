@@ -99,6 +99,38 @@ struct
       )
     )
 
+  let pred =
+    Lambda.Lam ("n",
+      Lambda.Lam ("f",
+        Lambda.Lam ("x",
+          Lambda.App (
+            Lambda.App (
+              Lambda.App (
+                Lambda.Id "n",
+                Lambda.App (
+                  Lambda.Lam ("g",
+                    Lambda.Lam ("h",
+                      Lambda.Id "h"
+                    )
+                  ),
+                  Lambda.App (
+                    Lambda.Id "g",
+                    Lambda.Id "f"
+                  )
+                )
+              ),
+              Lambda.Lam ("u",
+                Lambda.Id "x"
+              )
+            ),
+            Lambda.Lam ("u",
+              Lambda.Id "u"
+            )
+          )
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
@@ -129,6 +161,18 @@ struct
             succ
           ),
           Lambda.Id "n"
+        )
+      )
+    )
+  | M.Sub (e1, e2) ->
+    Lambda.Lam ("m",
+      Lambda.Lam ("n",
+        Lambda.App (
+          Lambda.App (
+            Lambda.Id "n",
+            pred
+          ),
+          Lambda.Id "m"
         )
       )
     )
