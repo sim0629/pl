@@ -23,12 +23,31 @@ struct
       )
     )
 
+  let y =
+    Lambda.Lam ("g",
+      Lambda.App (
+        Lambda.Lam ("x",
+          Lambda.App (
+            Lambda.Id "g",
+            Lambda.App (Lambda.Id "x", Lambda.Id "x")
+          )
+        ),
+        Lambda.Lam ("x",
+          Lambda.App (
+            Lambda.Id "g",
+            Lambda.App (Lambda.Id "x", Lambda.Id "x")
+          )
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
   | M.Var x -> Lambda.Id x
   | M.Fn (x, e) -> Lambda.Lam (x, encode e)
   | M.App (e1, e2) -> Lambda.App (encode e1, encode e2)
+  | M.Rec (f, x, e) -> Lambda.App (y, Lambda.Lam (f, Lambda.Lam (x, encode e)))
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
