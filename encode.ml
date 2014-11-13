@@ -81,6 +81,24 @@ struct
       )
     )
 
+  let succ =
+    Lambda.Lam ("n",
+      Lambda.Lam ("f",
+        Lambda.Lam ("x",
+          Lambda.App (
+            Lambda.Id "f",
+            Lambda.App (
+              Lambda.App (
+                Lambda.Id "n",
+                Lambda.Id "f"
+              ),
+              Lambda.Id "x"
+            )
+          )
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
@@ -101,6 +119,18 @@ struct
         encode ea
       ),
       encode eb
+    )
+  | M.Add (e1, e2) ->
+    Lambda.Lam ("m",
+      Lambda.Lam ("n",
+        Lambda.App (
+          Lambda.App (
+            Lambda.Id "m",
+            succ
+          ),
+          Lambda.Id "n"
+        )
+      )
     )
   | _ -> raise (Error "not implemented") (* Implement this *)
 
