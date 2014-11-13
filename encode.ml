@@ -131,6 +131,32 @@ struct
       )
     )
 
+  let add =
+    Lambda.Lam ("m",
+      Lambda.Lam ("n",
+        Lambda.App (
+          Lambda.App (
+            Lambda.Id "m",
+            succ
+          ),
+          Lambda.Id "n"
+        )
+      )
+    )
+
+  let sub =
+    Lambda.Lam ("m",
+      Lambda.Lam ("n",
+        Lambda.App (
+          Lambda.App (
+            Lambda.Id "n",
+            pred
+          ),
+          Lambda.Id "m"
+        )
+      )
+    )
+
   let ands =
     Lambda.Lam ("p",
       Lambda.Lam ("q",
@@ -181,28 +207,20 @@ struct
       encode eb
     )
   | M.Add (e1, e2) ->
-    Lambda.Lam ("m",
-      Lambda.Lam ("n",
-        Lambda.App (
-          Lambda.App (
-            Lambda.Id "m",
-            succ
-          ),
-          Lambda.Id "n"
-        )
-      )
+    Lambda.App (
+      Lambda.App (
+        add,
+        encode e1
+      ),
+      encode e2
     )
   | M.Sub (e1, e2) ->
-    Lambda.Lam ("m",
-      Lambda.Lam ("n",
-        Lambda.App (
-          Lambda.App (
-            Lambda.Id "n",
-            pred
-          ),
-          Lambda.Id "m"
-        )
-      )
+    Lambda.App (
+      Lambda.App (
+        sub,
+        encode e1
+      ),
+      encode e2
     )
   | M.And (e1, e2) ->
     Lambda.App (
