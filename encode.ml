@@ -23,10 +23,11 @@ struct
       )
     )
 
-  let encode : M.mexp -> Lambda.lexp
+  let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
   | M.Var x -> Lambda.Id x
+  | M.Fn (x, e) -> Lambda.Lam (x, encode e)
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
