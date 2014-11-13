@@ -41,6 +41,46 @@ struct
       )
     )
 
+  let t =
+    Lambda.Lam ("x",
+      Lambda.Lam ("y",
+        Lambda.Id "x"
+      )
+    )
+
+  let f =
+    Lambda.Lam ("x",
+      Lambda.Lam ("y",
+        Lambda.Id "x"
+      )
+    )
+
+  let isz =
+    Lambda.Lam ("n",
+      Lambda.App (
+        Lambda.App (
+          Lambda.Id "n",
+          Lambda.Lam ("x", f)
+        ),
+        t
+      )
+    )
+
+  let ifs =
+    Lambda.Lam ("p",
+      Lambda.Lam ("a",
+        Lambda.Lam ("b",
+          Lambda.App (
+            Lambda.App (
+              Lambda.Id "p",
+              Lambda.Id "a"
+            ),
+            Lambda.Id "b"
+          )
+        )
+      )
+    )
+
   let rec encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
@@ -48,6 +88,20 @@ struct
   | M.Fn (x, e) -> Lambda.Lam (x, encode e)
   | M.App (e1, e2) -> Lambda.App (encode e1, encode e2)
   | M.Rec (f, x, e) -> Lambda.App (y, Lambda.Lam (f, Lambda.Lam (x, encode e)))
+  | M.Ifz (ep, ea, eb) ->
+    Lambda.App (
+      Lambda.App (
+        Lambda.App (
+          ifs,
+          Lambda.App (
+            isz,
+            encode ep
+          )
+        ),
+        encode ea
+      ),
+      encode eb
+    )
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
