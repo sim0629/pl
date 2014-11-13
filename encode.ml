@@ -107,15 +107,15 @@ struct
             Lambda.App (
               Lambda.App (
                 Lambda.Id "n",
-                Lambda.App (
-                  Lambda.Lam ("g",
-                    Lambda.Lam ("h",
-                      Lambda.Id "h"
+                Lambda.Lam ("g",
+                  Lambda.Lam ("h",
+                    Lambda.App (
+                      Lambda.Id "h",
+                      Lambda.App (
+                        Lambda.Id "g",
+                        Lambda.Id "f"
+                      )
                     )
-                  ),
-                  Lambda.App (
-                    Lambda.Id "g",
-                    Lambda.Id "f"
                   )
                 )
               ),
