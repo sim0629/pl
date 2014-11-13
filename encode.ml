@@ -26,6 +26,7 @@ struct
   let encode : M.mexp -> Lambda.lexp
   = fun pgm -> match pgm with
   | M.Num n -> encode_num n
+  | M.Var x -> Lambda.Id x
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
