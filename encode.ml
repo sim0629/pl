@@ -230,6 +230,16 @@ struct
       ),
       encode e
     )
+  | M.Snd e ->
+    Lambda.App (
+      Lambda.Lam ("p",
+        Lambda.App (
+          Lambda.Id "p",
+          f
+        )
+      ),
+      encode e
+    )
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
