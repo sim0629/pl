@@ -240,6 +240,5 @@ struct
       ),
       encode e
     )
-  | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
