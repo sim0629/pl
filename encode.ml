@@ -28,6 +28,7 @@ struct
   | M.Num n -> encode_num n
   | M.Var x -> Lambda.Id x
   | M.Fn (x, e) -> Lambda.Lam (x, encode e)
+  | M.App (e1, e2) -> Lambda.App (encode e1, encode e2)
   | _ -> raise (Error "not implemented") (* Implement this *)
 
 end
