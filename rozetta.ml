@@ -30,6 +30,15 @@ module Rozetta = struct
       let c' = trans_tail c Sonata.empty_command in
       trans_tail tail
         ((Sonata.PUSH (Sonata.Fn (x, c')))::result)
+    | (Sm5.POP)::tail ->
+      trans_tail tail
+        ((Sonata.POP)::result)
+    | (Sm5.STORE)::tail ->
+      trans_tail tail
+        ((Sonata.STORE)::result)
+    | (Sm5.LOAD)::tail ->
+      trans_tail tail
+        ((Sonata.LOAD)::result)
 
   let trans : Sm5.command -> Sonata.command = fun command ->
     trans_tail command Sonata.empty_command
