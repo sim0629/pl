@@ -27,7 +27,7 @@ module Rozetta = struct
       trans_tail tail
         ((Sonata.PUSH (Sonata.Id x))::result)
     | (Sm5.PUSH (Sm5.Fn (x, c)))::tail ->
-      let c' = trans_tail c Sonata.empty_command in
+      let c' = trans c in
       trans_tail tail
         ((Sonata.PUSH (Sonata.Fn (x, c')))::result)
     | (Sm5.POP)::tail ->
@@ -40,8 +40,8 @@ module Rozetta = struct
       trans_tail tail
         ((Sonata.LOAD)::result)
     | (Sm5.JTR (ct, cf))::tail ->
-      let ct' = trans_tail ct Sonata.empty_command in
-      let cf' = trans_tail cf Sonata.empty_command in
+      let ct' = trans ct in
+      let cf' = trans cf in
       trans_tail tail
         ((Sonata.JTR (ct', cf'))::result)
     | (Sm5.MALLOC)::tail ->
@@ -88,8 +88,7 @@ module Rozetta = struct
     | (Sm5.NOT)::tail ->
       trans_tail tail
         ((Sonata.NOT)::result)
-
-  let trans : Sm5.command -> Sonata.command = fun command ->
-    trans_tail command Sonata.empty_command
+  and trans : Sm5.command -> Sonata.command = fun command ->
+    List.rev (trans_tail command Sonata.empty_command)
 
 end
