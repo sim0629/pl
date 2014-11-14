@@ -39,6 +39,11 @@ module Rozetta = struct
     | (Sm5.LOAD)::tail ->
       trans_tail tail
         ((Sonata.LOAD)::result)
+    | (Sm5.JTR (ct, cf))::tail ->
+      let ct' = trans_tail ct Sonata.empty_command in
+      let cf' = trans_tail cf Sonata.empty_command in
+      trans_tail tail
+        ((Sonata.JTR (ct', cf'))::result)
 
   let trans : Sm5.command -> Sonata.command = fun command ->
     trans_tail command Sonata.empty_command
