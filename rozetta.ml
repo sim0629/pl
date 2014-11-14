@@ -44,6 +44,50 @@ module Rozetta = struct
       let cf' = trans_tail cf Sonata.empty_command in
       trans_tail tail
         ((Sonata.JTR (ct', cf'))::result)
+    | (Sm5.MALLOC)::tail ->
+      trans_tail tail
+        ((Sonata.MALLOC)::result)
+    | (Sm5.BOX n)::tail ->
+      trans_tail tail
+        ((Sonata.BOX n)::result)
+    | (Sm5.UNBOX x)::tail ->
+      trans_tail tail
+        ((Sonata.UNBOX x)::result)
+    | (Sm5.BIND x)::tail ->
+      trans_tail tail
+        ((Sonata.BIND x)::result)
+    | (Sm5.UNBIND)::tail ->
+      trans_tail tail
+        ((Sonata.UNBIND)::result)
+    | (Sm5.GET)::tail ->
+      trans_tail tail
+        ((Sonata.GET)::result)
+    | (Sm5.PUT)::tail ->
+      trans_tail tail
+        ((Sonata.PUT)::result)
+    | (Sm5.CALL)::tail ->
+      failwith "not implemented"
+    | (Sm5.ADD)::tail ->
+      trans_tail tail
+        ((Sonata.ADD)::result)
+    | (Sm5.SUB)::tail ->
+      trans_tail tail
+        ((Sonata.SUB)::result)
+    | (Sm5.MUL)::tail ->
+      trans_tail tail
+        ((Sonata.MUL)::result)
+    | (Sm5.DIV)::tail ->
+      trans_tail tail
+        ((Sonata.DIV)::result)
+    | (Sm5.EQ)::tail ->
+      trans_tail tail
+        ((Sonata.EQ)::result)
+    | (Sm5.LESS)::tail ->
+      trans_tail tail
+        ((Sonata.LESS)::result)
+    | (Sm5.NOT)::tail ->
+      trans_tail tail
+        ((Sonata.NOT)::result)
 
   let trans : Sm5.command -> Sonata.command = fun command ->
     trans_tail command Sonata.empty_command
