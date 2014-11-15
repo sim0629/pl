@@ -45,18 +45,22 @@ module Rozetta = struct
           Sonata.UNBOX "#v";
           Sonata.BIND x;
         ];
-        trans c;
-        [
-          Sonata.PUSH (Sonata.Id "#f");
-          Sonata.LOAD;
-          Sonata.UNBIND;
-          Sonata.POP;
-          Sonata.PUSH (Sonata.Val Sonata.Unit);
-          Sonata.MALLOC;
-          Sonata.BIND "#";
-          Sonata.PUSH (Sonata.Id "#");
-          Sonata.CALL;
-        ];
+        trans (
+          concat_tail [
+            c;
+            [
+              Sm5.PUSH (Sm5.Id "#f");
+              Sm5.LOAD;
+              Sm5.UNBIND;
+              Sm5.POP;
+              Sm5.PUSH (Sm5.Val Sm5.Unit);
+              Sm5.MALLOC;
+              Sm5.BIND "#";
+              Sm5.PUSH (Sm5.Id "#");
+              Sm5.CALL;
+            ];
+          ]
+        );
       ] in
       trans_tail tail
         ((Sonata.PUSH (Sonata.Fn (x, c')))::result)
