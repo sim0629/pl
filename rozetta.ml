@@ -70,10 +70,9 @@ module Rozetta = struct
       trans_tail tail
         ((Sonata.LOAD)::result)
     | (Sm5.JTR (ct, cf))::tail ->
-      let ct' = trans ct in
-      let cf' = trans cf in
-      trans_tail tail
-        ((Sonata.JTR (ct', cf'))::result)
+      let ct' = trans (concat_tail [ct; tail]) in
+      let cf' = trans (concat_tail [cf; tail]) in
+      ((Sonata.JTR (ct', cf'))::result)
     | (Sm5.MALLOC)::tail ->
       trans_tail tail
         ((Sonata.MALLOC)::result)
