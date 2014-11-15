@@ -1,0 +1,13 @@
+let x := 0 in
+let proc f(x) = (
+  if (x = 0) then
+    0
+  else
+    x + f(x - 1)
+) in
+if (x = 0) then
+  write f(10)
+else
+  write f(11)
+;
+write 5
