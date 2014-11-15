@@ -100,8 +100,6 @@ module Rozetta = struct
         ((Sonata.PUT)::result)
     | (Sm5.CALL)::tail ->
       List.rev_append [
-        Sonata.BIND "#l";
-        Sonata.MALLOC;
         Sonata.BIND "#v";
         Sonata.PUSH (Sonata.Id "#v");
         Sonata.STORE;
@@ -109,8 +107,6 @@ module Rozetta = struct
           Sonata.Fn ("#",
             concat_tail [
               [
-                Sonata.UNBIND;
-                Sonata.POP;
                 Sonata.UNBIND;
                 Sonata.POP;
               ];
@@ -125,9 +121,7 @@ module Rozetta = struct
         Sonata.UNBIND;
         Sonata.UNBIND;
         Sonata.BOX 2;
-        Sonata.PUSH (Sonata.Id "#l");
-        Sonata.UNBIND;
-        Sonata.POP;
+        Sonata.MALLOC;
         Sonata.CALL;
       ] result
     | (Sm5.ADD)::tail ->
