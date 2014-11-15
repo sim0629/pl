@@ -1,0 +1,4 @@
+let x := 0 in
+let proc inc(n) = (n + 1) in
+x := inc(x);
+write x
