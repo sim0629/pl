@@ -7,6 +7,13 @@ open Sm5
 open Sonata
 module Rozetta = struct
 
+  let concat_tail ll =
+    List.rev (
+      List.fold_left
+        (fun res l -> List.rev_append l res)
+        [] ll
+    )
+
   let rec trans_tail command result =
     match command with
     | [] -> result
@@ -27,7 +34,30 @@ module Rozetta = struct
       trans_tail tail
         ((Sonata.PUSH (Sonata.Id x))::result)
     | (Sm5.PUSH (Sm5.Fn (x, c)))::tail ->
-      let c' = trans c in
+      let c' = concat_tail [
+        [
+          Sonata.PUSH (Sonata.Id x);
+          Sonata.LOAD;
+          Sonata.PUSH (Sonata.Id x);
+          Sonata.LOAD;
+          Sonata.UNBOX "#f";
+          Sonata.BIND "#f";
+          Sonata.UNBOX "#v";
+          Sonata.BIND x;
+        ];
+        trans c;
+        [
+          Sonata.PUSH (Sonata.Id "#f");
+          Sonata.LOAD;
+          Sonata.UNBIND;
+          Sonata.POP;
+          Sonata.PUSH (Sonata.Val Sonata.Unit);
+          Sonata.MALLOC;
+          Sonata.BIND "#";
+          Sonata.PUSH (Sonata.Id "#");
+          Sonata.CALL;
+        ];
+      ] in
       trans_tail tail
         ((Sonata.PUSH (Sonata.Fn (x, c')))::result)
     | (Sm5.POP)::tail ->
@@ -66,7 +96,37 @@ module Rozetta = struct
       trans_tail tail
         ((Sonata.PUT)::result)
     | (Sm5.CALL)::tail ->
-      failwith "not implemented"
+      List.rev_append [
+        Sonata.BIND "#l";
+        Sonata.MALLOC;
+        Sonata.BIND "#v";
+        Sonata.PUSH (Sonata.Id "#v");
+        Sonata.STORE;
+        Sonata.PUSH (
+          Sonata.Fn ("#",
+            concat_tail [
+              [
+                Sonata.UNBIND;
+                Sonata.POP;
+                Sonata.UNBIND;
+                Sonata.POP;
+              ];
+              trans tail;
+            ]
+          )
+        );
+        Sonata.MALLOC;
+        Sonata.BIND "#f";
+        Sonata.PUSH (Sonata.Id "#f");
+        Sonata.STORE;
+        Sonata.UNBIND;
+        Sonata.UNBIND;
+        Sonata.BOX 2;
+        Sonata.PUSH (Sonata.Id "#l");
+        Sonata.UNBIND;
+        Sonata.POP;
+        Sonata.CALL;
+      ] result
     | (Sm5.ADD)::tail ->
       trans_tail tail
         ((Sonata.ADD)::result)
