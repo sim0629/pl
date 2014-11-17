@@ -236,16 +236,25 @@ struct
   | M.And (e1, e2) ->
     Lambda.App (
       Lambda.App (
-        ands,
         Lambda.App (
-          isnz,
-          encode e1
-        )
+          ifs,
+          Lambda.App (
+            Lambda.App (
+              ands,
+              Lambda.App (
+                isnz,
+                encode e1
+              )
+            ),
+            Lambda.App (
+              isnz,
+              encode e2
+            )
+          )
+        ),
+        encode_num 1
       ),
-      Lambda.App (
-        isnz,
-        encode e2
-      )
+      encode_num 0
     )
   | M.Pair (el, er) ->
     Lambda.App (
