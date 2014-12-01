@@ -6,5 +6,5 @@
 
 open M
 module M_SimChecker : M_SimTypeChecker = struct
-    let check exp = raise (TypeError "no checker") (* TODO: implementation *)
+  let check exp = raise (TypeError "no checker") (* TODO: implementation *)
 end

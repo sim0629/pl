@@ -6,5 +6,5 @@
 open M
 
 module M_PolyChecker : M_PolyChecker = struct
-    let check exp = raise (TypeError "no checker") (* TODO: implementation *)
+  let check exp = raise (TypeError "no checker") (* TODO: implementation *)
 end
