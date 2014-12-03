@@ -138,11 +138,33 @@ module M_SimChecker : M_SimTypeChecker = struct
       let s'' = sgm senv' e2 GBool in
       (fun x -> s'' (s' (s x)))
     | BOP (EQ, e1, e2) ->
-      raise (TypeError "not impl")
+      let s = unify GBool typ in
+      let senv = subs_env s env in
+      let a = next_alpha () in
+      let s' = sgm senv e1 a in
+      let senv' = subs_env s' senv in
+      let sa' = s' a in
+      let s'' = sgm senv' e2 sa' in
+      let sa'' = s'' sa' in
+      (
+        match sa'' with
+        | GInt | GBool | GString | GLoc _ ->
+          (fun x -> s'' (s' (s x)))
+        | _ ->
+          raise (TypeError "eq mismatch")
+      )
     | READ ->
       unify GInt typ
     | WRITE e ->
-      raise (TypeError "not impl")
+      let s = sgm env e typ in
+      let styp = s typ in
+      (
+        match styp with
+        | GInt | GBool | GString ->
+          s
+        | _ ->
+          raise (TypeError "write fail")
+      )
     | MALLOC e ->
       let a = next_alpha () in
       let g = GLoc a in
