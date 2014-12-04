@@ -27,8 +27,30 @@ module M_SimChecker : M_SimTypeChecker = struct
     let v = !alpha in
     v
 
+  let rec subs_g_one (p, q) g =
+    if g = p then
+      q
+    else
+      match g with
+      | GPair (g1, g2) ->
+        GPair (subs_g_one (p, q) g1, subs_g_one (p, q) g2)
+      | GLoc g0 ->
+        GLoc (subs_g_one (p, q) g0)
+      | GArrow (g1, g2) ->
+        GArrow (subs_g_one (p, q) g1, subs_g_one (p, q) g2)
+      | _ -> g
+
+  let subs_g s g =
+    List.fold_left
+      (fun g (p, q) -> subs_g_one (p, q) g)
+      g
+      (List.rev s)
+
   let subs_env s env =
-    List.map (fun (k, v) -> (k, s v)) env
+    List.map (fun (k, v) -> (k, subs_g s v)) env
+
+  let subs_append s' s =
+    List.rev_append s' s
 
   let env_push env (x, g) =
     (x, g)::env
@@ -51,29 +73,27 @@ module M_SimChecker : M_SimTypeChecker = struct
 
   let rec unify gl gr =
     if gl = gr then
-      (fun x -> x)
+      []
     else
       match (gl, gr) with
-      | (GVar (GAll _), gr) ->
+      | (GVar (GAll _), _)
+      | (GVar (GEquable _), (GInt | GBool | GString | (GLoc _)))
+      | (GVar (GWritable _), (GInt | GBool | GString)) ->
         if aing gl gr then
           raise (TypeError "unification fail (a, t)")
         else
-          (fun x -> if x = gl then gr else x)
-      | (GVar (GEquable _), (GInt | GBool | GString | (GLoc _)))
-      | (GVar (GWritable _), (GInt | GBool | GString)) ->
-        (fun x -> if x = gl then gr else x)
-      | (gl, GVar (GAll _)) ->
+          [(gl, gr)]
+      | (_, GVar (GAll _))
+      | ((GInt | GBool | GString | (GLoc _)), GVar (GEquable _))
+      | ((GInt | GBool | GString), GVar (GWritable _)) ->
         if aing gr gl then
           raise (TypeError "unification fail (t, a)")
         else
-          (fun x -> if x = gr then gl else x)
-      | ((GInt | GBool | GString | (GLoc _)), GVar (GEquable _))
-      | ((GInt | GBool | GString), GVar (GWritable _)) ->
-        (fun x -> if x = gr then gl else x)
+          [(gr, gl)]
       | (GArrow (gl1, gl2), GArrow (gr1, gr2)) ->
         let s = unify gl1 gr1 in
-        let s' = unify (s gl2) (s gr2) in
-        (fun x -> s' (s x))
+        let s' = unify (subs_g s gl2) (subs_g s gr2) in
+        subs_append s' s
       | _ ->
         raise (TypeError "unification fail _")
 
@@ -103,17 +123,17 @@ module M_SimChecker : M_SimTypeChecker = struct
       let g = GArrow (a1, a2) in
       let s = unify g typ in
       let senv = subs_env s env in
-      let sa1 = s a1 in
-      let sa2 = s a2 in
+      let sa1 = subs_g s a1 in
+      let sa2 = subs_g s a2 in
       let s' = sgm (env_push senv (x, sa1)) e sa2 in
-      (fun x -> s' (s x))
+      subs_append s' s
     | APP (e, e') ->
       let a = GVar (GAll (next_alpha ())) in
       let s = sgm env e (GArrow (a, typ)) in
       let senv = subs_env s env in
-      let sa = s a in
+      let sa = subs_g s a in
       let s' = sgm senv e' sa in
-      (fun x -> s' (s x))
+      subs_append s' s
     | LET (REC (f, e), e') ->
       let a1 = GVar (GAll (next_alpha ())) in
       let a2 = GVar (GAll (next_alpha ())) in
@@ -122,7 +142,7 @@ module M_SimChecker : M_SimTypeChecker = struct
       let s = sgm env' e g in
       let senv = subs_env s env' in
       let s' = sgm senv e' typ in
-      (fun x -> s' (s x))
+      subs_append s' s
     | LET (NREC (x, e), e') ->
       sgm env (APP (FN (x, e'), e)) typ
     | IF (ec, et, ef) ->
@@ -130,55 +150,55 @@ module M_SimChecker : M_SimTypeChecker = struct
       let senv = subs_env s env in
       let s' = sgm senv et typ in
       let senv' = subs_env s' senv in
-      let styp = s' typ in
+      let styp = subs_g s' typ in
       let s'' = sgm senv' ef styp in
-      (fun x -> s'' (s' (s x)))
+      subs_append s'' (subs_append s' s)
     | BOP ((ADD|SUB), e1, e2) ->
       let s = unify GInt typ in
       let senv = subs_env s env in
       let s' = sgm senv e1 GInt in
       let senv' = subs_env s' senv in
       let s'' = sgm senv' e2 GInt in
-      (fun x -> s'' (s' (s x)))
+      subs_append s'' (subs_append s' s)
     | BOP ((AND|OR), e1, e2) ->
       let s = unify GBool typ in
       let senv = subs_env s env in
       let s' = sgm senv e1 GBool in
       let senv' = subs_env s' senv in
       let s'' = sgm senv' e2 GBool in
-      (fun x -> s'' (s' (s x)))
+      subs_append s'' (subs_append s' s)
     | BOP (EQ, e1, e2) ->
       let s = unify GBool typ in
       let senv = subs_env s env in
       let a = GVar (GEquable (next_alpha ())) in
       let s' = sgm senv e1 a in
       let senv' = subs_env s' senv in
-      let sa' = s' a in
+      let sa' = subs_g s' a in
       let s'' = sgm senv' e2 sa' in
-      (fun x -> s'' (s' (s x)))
+      subs_append s'' (subs_append s' s)
     | READ ->
       unify GInt typ
     | WRITE e ->
       let a = GVar (GWritable (next_alpha ())) in
       let s = unify a typ in
       let senv = subs_env s env in
-      let styp = s typ in
+      let styp = subs_g s typ in
       let s' = sgm senv e styp in
-      (fun x -> s' (s x))
+      subs_append s' s
     | MALLOC e ->
       let a = GVar (GAll (next_alpha ())) in
       let g = GLoc a in
       let s = unify g typ in
       let senv = subs_env s env in
-      let sa = s a in
+      let sa = subs_g s a in
       let s' = sgm senv e sa in
-      (fun x -> s' (s x))
+      subs_append s' s
     | ASSIGN (el, er) ->
       let s = sgm env er typ in
       let senv = subs_env s env in
-      let styp = s typ in
+      let styp = subs_g s typ in
       let s' = sgm senv el (GLoc styp) in
-      (fun x -> s' (s x))
+      subs_append s' s
     | BANG e ->
       sgm env e (GLoc typ)
     | SEQ (e1, e2) ->
@@ -186,7 +206,7 @@ module M_SimChecker : M_SimTypeChecker = struct
       let s = sgm env e1 a in
       let senv = subs_env s env in
       let s' = sgm senv e2 typ in
-      (fun x -> s' (s x))
+      subs_append s' s
     | PAIR (e1, e2) ->
       sgm env (FN ("#", APP (APP (VAR "#", e1), e2))) typ
     | SEL1 e ->
@@ -198,6 +218,6 @@ module M_SimChecker : M_SimTypeChecker = struct
     init_alpha ();
     let a0 = GVar (GAll (next_alpha ())) in
     let s = sgm [] exp a0 in
-    g2t (s a0)
+    g2t (subs_g s a0)
 
 end
