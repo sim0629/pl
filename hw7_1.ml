@@ -140,12 +140,16 @@ module M_SimChecker : M_SimTypeChecker = struct
     | LET (REC (f, e), e') ->
       let a1 = GVar (GAll (next_alpha ())) in
       let a2 = GVar (GAll (next_alpha ())) in
-      let g = GArrow (a1, a2) in
-      let env' = env_push env (f, g) in
-      let s = sgm env' e g in
-      let senv = subs_env s env' in
-      let s' = sgm senv e' typ in
-      subs_append s' s
+      let env = env_push env (f, GArrow (a1, a2)) in
+      let s = unify a2 typ in
+      let senv = subs_env s env in
+      let sa1 = subs_g s a1 in
+      let sa2 = subs_g s a2 in
+      let s' = sgm senv e' sa1 in
+      let senv' = subs_env s' senv in
+      let sg' = subs_g s' (GArrow (sa1, sa2)) in
+      let s'' = sgm senv' e sg' in
+      subs_append s'' (subs_append s' s)
     | LET (NREC (x, e), e') ->
       sgm env (APP (FN (x, e'), e)) typ
     | IF (ec, et, ef) ->
