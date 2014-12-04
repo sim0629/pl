@@ -208,11 +208,36 @@ module M_SimChecker : M_SimTypeChecker = struct
       let s' = sgm senv e2 typ in
       subs_append s' s
     | PAIR (e1, e2) ->
-      sgm env (FN ("#", APP (APP (VAR "#", e1), e2))) typ
+      let a1 = GVar (GAll (next_alpha ())) in
+      let a2 = GVar (GAll (next_alpha ())) in
+      let g = GPair (a1, a2) in
+      let s = unify g typ in
+      let senv = subs_env s env in
+      let sa1 = subs_g s a1 in
+      let sa2 = subs_g s a2 in
+      let s' = sgm senv e1 sa1 in
+      let senv' = subs_env s' senv in
+      let sa2' = subs_g s' sa2 in
+      let s'' = sgm senv' e2 sa2' in
+      subs_append s'' (subs_append s' s)
     | SEL1 e ->
-      sgm env (APP (e, FN ("x", FN ("y", VAR "x")))) typ
+      let a1 = GVar (GAll (next_alpha ())) in
+      let a2 = GVar (GAll (next_alpha ())) in
+      let g = GPair (a1, a2) in
+      let s = unify a1 typ in
+      let senv = subs_env s env in
+      let sg = subs_g s g in
+      let s' = sgm senv e sg in
+      subs_append s' s
     | SEL2 e ->
-      sgm env (APP (e, FN ("x", FN ("y", VAR "y")))) typ
+      let a1 = GVar (GAll (next_alpha ())) in
+      let a2 = GVar (GAll (next_alpha ())) in
+      let g = GPair (a1, a2) in
+      let s = unify a2 typ in
+      let senv = subs_env s env in
+      let sg = subs_g s g in
+      let s' = sgm senv e sg in
+      subs_append s' s
 
   let check exp =
     init_alpha ();
