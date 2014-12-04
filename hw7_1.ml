@@ -74,15 +74,38 @@ module M_SimChecker : M_SimTypeChecker = struct
     else
       match (gl, gr) with
       | (GVar (GAll _), _)
-      | (GVar (GEquable _), (GInt | GBool | GString | (GLoc _)))
-      | (GVar (GWritable _), (GInt | GBool | GString)) ->
+      | (
+          GVar (GEquable _),
+          (
+            GInt | GBool | GString | (GLoc _) |
+            GVar (GWritable _) | GVar (GEquable _)
+          )
+        )
+      | (
+          GVar (GWritable _),
+          (
+            GInt | GBool | GString |
+            GVar (GWritable _)
+          )
+        ) ->
         if aing gl gr then
           raise (TypeError "unification fail (a, t)")
         else
           [(gl, gr)]
       | (_, GVar (GAll _))
-      | ((GInt | GBool | GString | (GLoc _)), GVar (GEquable _))
-      | ((GInt | GBool | GString), GVar (GWritable _)) ->
+      | (
+          (
+            GInt | GBool | GString | (GLoc _) |
+            GVar (GWritable _)
+          ),
+          GVar (GEquable _)
+        )
+      | (
+          (
+            GInt | GBool | GString
+          ),
+          GVar (GWritable _)
+        ) ->
         if aing gr gl then
           raise (TypeError "unification fail (t, a)")
         else
