@@ -49,7 +49,7 @@ module M_LowFat : M_Runner = struct
                     match (v1,v2) with
                      | (Num n1, Num n2) -> Bool (n1 = n2)
                      | (String s1, String s2) -> Bool (s1 = s2)
-                     | (Bool b1, Bool b2) -> Bool (b1 = b1)
+                     | (Bool b1, Bool b2) -> Bool (b1 = b2)
                      | (Loc l1, Loc l2) -> Bool (l1 = l2)
                      | _ -> error "EQ operation operands"
                   )
