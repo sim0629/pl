@@ -7,13 +7,17 @@
 open M
 module M_SimChecker : M_SimTypeChecker = struct
   type gtype =
-    | GVar of int
+    | GVar of gvar
     | GInt
     | GBool
     | GString
     | GPair of gtype * gtype
     | GLoc of gtype
     | GArrow of gtype * gtype
+  and gvar =
+    | GAll of int
+    | GEquable of int
+    | GWritable of int
 
   let alpha = ref 0
   let init_alpha () =
@@ -21,7 +25,7 @@ module M_SimChecker : M_SimTypeChecker = struct
   let next_alpha () =
     alpha := !alpha + 1;
     let v = !alpha in
-    GVar v
+    v
 
   let subs_env s env =
     List.map (fun (k, v) -> (k, s v)) env
@@ -50,16 +54,22 @@ module M_SimChecker : M_SimTypeChecker = struct
       (fun x -> x)
     else
       match (gl, gr) with
-      | (GVar _, gr) ->
+      | (GVar (GAll _), gr) ->
         if aing gl gr then
           raise (TypeError "unification fail (a, t)")
         else
           (fun x -> if x = gl then gr else x)
-      | (gl, GVar _) ->
+      | (GVar (GEquable _), (GInt | GBool | GString | (GLoc _)))
+      | (GVar (GWritable _), (GInt | GBool | GString)) ->
+        (fun x -> if x = gl then gr else x)
+      | (gl, GVar (GAll _)) ->
         if aing gr gl then
           raise (TypeError "unification fail (t, a)")
         else
           (fun x -> if x = gr then gl else x)
+      | ((GInt | GBool | GString | (GLoc _)), GVar (GEquable _))
+      | ((GInt | GBool | GString), GVar (GWritable _)) ->
+        (fun x -> if x = gr then gl else x)
       | (GArrow (gl1, gl2), GArrow (gr1, gr2)) ->
         let s = unify gl1 gr1 in
         let s' = unify (s gl2) (s gr2) in
@@ -69,7 +79,7 @@ module M_SimChecker : M_SimTypeChecker = struct
 
   let rec g2t g =
     match g with
-    | GVar n -> raise (TypeError "impossible")
+    | GVar _ -> raise (TypeError "impossible")
     | GInt -> TyInt
     | GBool -> TyBool
     | GString -> TyString
@@ -88,8 +98,8 @@ module M_SimChecker : M_SimTypeChecker = struct
     | VAR x ->
       unify typ (env_lookup env x)
     | FN (x, e) ->
-      let a1 = next_alpha () in
-      let a2 = next_alpha () in
+      let a1 = GVar (GAll (next_alpha ())) in
+      let a2 = GVar (GAll (next_alpha ())) in
       let g = GArrow (a1, a2) in
       let s = unify g typ in
       let senv = subs_env s env in
@@ -98,15 +108,15 @@ module M_SimChecker : M_SimTypeChecker = struct
       let s' = sgm (env_push senv (x, sa1)) e sa2 in
       (fun x -> s' (s x))
     | APP (e, e') ->
-      let a = next_alpha () in
+      let a = GVar (GAll (next_alpha ())) in
       let s = sgm env e (GArrow (a, typ)) in
       let senv = subs_env s env in
       let sa = s a in
       let s' = sgm senv e' sa in
       (fun x -> s' (s x))
     | LET (REC (f, e), e') ->
-      let a1 = next_alpha () in
-      let a2 = next_alpha () in
+      let a1 = GVar (GAll (next_alpha ())) in
+      let a2 = GVar (GAll (next_alpha ())) in
       let g = GArrow (a1, a2) in
       let env' = env_push env (f, g) in
       let s = sgm env' e g in
@@ -140,33 +150,23 @@ module M_SimChecker : M_SimTypeChecker = struct
     | BOP (EQ, e1, e2) ->
       let s = unify GBool typ in
       let senv = subs_env s env in
-      let a = next_alpha () in
+      let a = GVar (GEquable (next_alpha ())) in
       let s' = sgm senv e1 a in
       let senv' = subs_env s' senv in
       let sa' = s' a in
       let s'' = sgm senv' e2 sa' in
-      let sa'' = s'' sa' in
-      (
-        match sa'' with
-        | GInt | GBool | GString | GLoc _ ->
-          (fun x -> s'' (s' (s x)))
-        | _ ->
-          raise (TypeError "eq mismatch")
-      )
+      (fun x -> s'' (s' (s x)))
     | READ ->
       unify GInt typ
     | WRITE e ->
-      let s = sgm env e typ in
+      let a = GVar (GWritable (next_alpha ())) in
+      let s = unify a typ in
+      let senv = subs_env s env in
       let styp = s typ in
-      (
-        match styp with
-        | GInt | GBool | GString ->
-          s
-        | _ ->
-          raise (TypeError "write fail")
-      )
+      let s' = sgm senv e styp in
+      (fun x -> s' (s x))
     | MALLOC e ->
-      let a = next_alpha () in
+      let a = GVar (GAll (next_alpha ())) in
       let g = GLoc a in
       let s = unify g typ in
       let senv = subs_env s env in
@@ -182,7 +182,7 @@ module M_SimChecker : M_SimTypeChecker = struct
     | BANG e ->
       sgm env e (GLoc typ)
     | SEQ (e1, e2) ->
-      let a = next_alpha () in
+      let a = GVar (GAll (next_alpha ())) in
       let s = sgm env e1 a in
       let senv = subs_env s env in
       let s' = sgm senv e2 typ in
@@ -196,7 +196,7 @@ module M_SimChecker : M_SimTypeChecker = struct
 
   let check exp =
     init_alpha ();
-    let a0 = next_alpha () in
+    let a0 = GVar (GAll (next_alpha ())) in
     let s = sgm [] exp a0 in
     g2t (s a0)
 
