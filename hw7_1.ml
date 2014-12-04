@@ -90,6 +90,9 @@ module M_SimChecker : M_SimTypeChecker = struct
           raise (TypeError "unification fail (t, a)")
         else
           [(gr, gl)]
+      | (GLoc gl0, GLoc gr0) ->
+        unify gl0 gr0
+      | (GPair (gl1, gl2), GPair (gr1, gr2))
       | (GArrow (gl1, gl2), GArrow (gr1, gr2)) ->
         let s = unify gl1 gr1 in
         let s' = unify (subs_g s gl2) (subs_g s gr2) in
