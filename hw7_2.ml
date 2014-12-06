@@ -199,7 +199,7 @@ module M_PolyChecker : M_PolyChecker = struct
 
   let rec g2t g =
     match g with
-    | GVar _ -> raise (TypeError "impossible")
+    | GVar _ -> raise (TypeError "unable to express")
     | GInt -> TyInt
     | GBool -> TyBool
     | GString -> TyString
