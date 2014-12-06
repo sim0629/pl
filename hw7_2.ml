@@ -207,6 +207,19 @@ module M_PolyChecker : M_PolyChecker = struct
     | GLoc t0 -> TyLoc (g2t t0)
     | GArrow (t0, t1) -> TyArrow (g2t t0, g2t t1)
 
+  let rec expansive e =
+    match e with
+    | CONST _ | VAR _ | FN _ | READ -> false
+    | APP _ | MALLOC _ -> true
+    | LET (REC (_, e1), e2) | LET (NREC (_, e1), e2)
+    | BOP (_, e1, e2) | ASSIGN (e1, e2)
+    | SEQ (e1, e2) | PAIR (e1, e2) ->
+      (expansive e1) || (expansive e2)
+    | IF (ec, et, ef) ->
+      (expansive ec) || (expansive et) || (expansive ef)
+    | WRITE e0 | BANG e0 | SEL1 e0 | SEL2 e0 ->
+      expansive e0
+
   let rec sgm env exp typ =
     match exp with
     | CONST (S _) ->
@@ -243,7 +256,10 @@ module M_PolyChecker : M_PolyChecker = struct
       let senv = subs_env s env in
       let sg = subs_g s g in
       let styp = subs_g s typ in
-      let s' = sgm (env_push senv (f, gen senv sg)) e' styp in
+      let gsg =
+        if expansive e then (GSimple sg)
+        else gen senv sg in
+      let s' = sgm (env_push senv (f, gsg)) e' styp in
       s' @ s
     | LET (NREC (x, e), e') ->
       let a = GVar (GAll (next_alpha ())) in
@@ -251,7 +267,10 @@ module M_PolyChecker : M_PolyChecker = struct
       let senv = subs_env s env in
       let sa = subs_g s a in
       let styp = subs_g s typ in
-      let s' = sgm (env_push senv (x, gen senv sa)) e' styp in
+      let gsa =
+        if expansive e then (GSimple sa)
+        else gen senv sa in
+      let s' = sgm (env_push senv (x, gsa)) e' styp in
       s' @ s
     | IF (ec, et, ef) ->
       let s = sgm env ec GBool in
