@@ -349,7 +349,9 @@ module M_PolyChecker : M_PolyChecker = struct
   let check exp =
     init_alpha ();
     let a0 = GVar (GAll (next_alpha ())) in
-    let s = sgm [] exp a0 in
-    g2t (subs_g s a0)
+    let exp' = LET (NREC ("#", exp), VAR "#") in
+    let s = sgm [] exp' a0 in
+    let g = subs_g s a0 in
+    g2t g
 
 end
