@@ -18,6 +18,9 @@ module M_PolyChecker : M_PolyChecker = struct
     | GAll of int
     | GEquable of int
     | GWritable of int
+  and gscheme =
+    | GSimple of gtype
+    | GPoly of gvar * gscheme
 
   let alpha = ref 0
   let init_alpha () =
@@ -46,11 +49,20 @@ module M_PolyChecker : M_PolyChecker = struct
       g
       (List.rev s)
 
-  let subs_env s env =
-    List.map (fun (k, v) -> (k, subs_g s v)) env
+  let subs_except s a =
+    List.filter (fun (p, _) -> p != a) s
+  let rec subs_gs s gs =
+    match gs with
+    | GSimple g ->
+      GSimple (subs_g s g)
+    | GPoly (a, gs') ->
+      GPoly (a, subs_gs (subs_except s (GVar a)) gs')
 
-  let env_push env (x, g) =
-    (x, g)::env
+  let subs_env s env =
+    List.map (fun (k, v) -> (k, subs_gs s v)) env
+
+  let env_push env (x, gs) =
+    (x, gs)::env
 
   let env_lookup env x =
     try
@@ -67,6 +79,71 @@ module M_PolyChecker : M_PolyChecker = struct
       | GLoc g0 -> aing a g0
       | GArrow (g1, g2) -> (aing a g1) || (aing a g2)
       | _ -> false
+
+  let rec spe_in s gs =
+    match gs with
+    | GSimple g ->
+      subs_g s g
+    | GPoly (GAll n, gs') ->
+      spe_in
+        ((
+          GVar (GAll n),
+          GVar (GAll (next_alpha ()))
+        )::s)
+        gs'
+    | GPoly (GEquable n, gs') ->
+      spe_in
+        ((
+          GVar (GEquable n),
+          GVar (GEquable (next_alpha ()))
+        )::s)
+        gs'
+    | GPoly (GWritable n, gs') ->
+      spe_in
+        ((
+          GVar (GWritable n),
+          GVar (GWritable (next_alpha ()))
+        )::s)
+        gs'
+  let spe gs =
+    spe_in [] gs
+
+  let diff l1 l2 =
+    List.filter
+      (fun v -> not (List.mem v l2))
+      l1
+  let rec ftv_g g =
+    match g with
+    | GVar v ->
+      [v]
+    | GInt | GBool | GString ->
+      []
+    | GPair (g1, g2) | GArrow (g1, g2) ->
+      (ftv_g g1) @ (ftv_g g2)
+    | GLoc g0 ->
+      ftv_g g0
+  let rec ftv_gs_in gs al =
+    match gs with
+    | GSimple g ->
+      diff (ftv_g g) al
+    | GPoly (a, gs') ->
+      ftv_gs_in gs' (a::al)
+  let ftv_gs gs =
+    ftv_gs_in gs []
+  let rec ftv_env env =
+    List.fold_left
+      (fun l (_, gs) -> l @ (ftv_gs gs))
+      []
+      env
+  let rec gen_in g al =
+    match al with
+    | [] ->
+      GSimple g
+    | a::al' ->
+      GPoly (a, gen_in g al')
+  let gen env g =
+    let al = diff (ftv_g g) (ftv_env env) in
+    gen_in g al
 
   let rec unify gl gr =
     if gl = gr then
@@ -139,7 +216,7 @@ module M_PolyChecker : M_PolyChecker = struct
     | CONST (B _) ->
       unify GBool typ
     | VAR x ->
-      unify typ (env_lookup env x)
+      unify typ (spe (env_lookup env x))
     | FN (x, e) ->
       let a1 = GVar (GAll (next_alpha ())) in
       let a2 = GVar (GAll (next_alpha ())) in
@@ -148,7 +225,7 @@ module M_PolyChecker : M_PolyChecker = struct
       let senv = subs_env s env in
       let sa1 = subs_g s a1 in
       let sa2 = subs_g s a2 in
-      let s' = sgm (env_push senv (x, sa1)) e sa2 in
+      let s' = sgm (env_push senv (x, (GSimple sa1))) e sa2 in
       s' @ s
     | APP (e, e') ->
       let a = GVar (GAll (next_alpha ())) in
@@ -161,14 +238,20 @@ module M_PolyChecker : M_PolyChecker = struct
       let a1 = GVar (GAll (next_alpha ())) in
       let a2 = GVar (GAll (next_alpha ())) in
       let g = GArrow (a1, a2) in
-      let env = env_push env (f, g) in
+      let env = env_push env (f, gen env g) in
       let s = sgm env e g in
       let senv = subs_env s env in
       let styp = subs_g s typ in
       let s' = sgm senv e' styp in
       s' @ s
     | LET (NREC (x, e), e') ->
-      sgm env (APP (FN (x, e'), e)) typ
+      let a = GVar (GAll (next_alpha ())) in
+      let s = sgm env e a in
+      let senv = subs_env s env in
+      let sa = subs_g s a in
+      let styp = subs_g s typ in
+      let s' = sgm (env_push senv (x, gen senv sa)) e' styp in
+      s' @ s
     | IF (ec, et, ef) ->
       let s = sgm env ec GBool in
       let senv = subs_env s env in
