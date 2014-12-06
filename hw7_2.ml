@@ -238,11 +238,12 @@ module M_PolyChecker : M_PolyChecker = struct
       let a1 = GVar (GAll (next_alpha ())) in
       let a2 = GVar (GAll (next_alpha ())) in
       let g = GArrow (a1, a2) in
-      let env = env_push env (f, gen env g) in
+      let env = env_push env (f, GSimple g) in
       let s = sgm env e g in
       let senv = subs_env s env in
+      let sg = subs_g s g in
       let styp = subs_g s typ in
-      let s' = sgm senv e' styp in
+      let s' = sgm (env_push senv (f, gen senv sg)) e' styp in
       s' @ s
     | LET (NREC (x, e), e') ->
       let a = GVar (GAll (next_alpha ())) in
