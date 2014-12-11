@@ -1,0 +1,6 @@
+(if true then
+  write 1
+else
+  write 0
+);
+write 2
