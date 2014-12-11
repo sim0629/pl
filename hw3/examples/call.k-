@@ -1,0 +1,4 @@
+let proc f(a) =
+  a
+in
+f(1, 2)
