@@ -1,0 +1,9 @@
+let n := 0 in
+let b := true in
+for n := 1 to 128 do (
+  b := true;
+  while b do (
+    write n;
+    b := false
+  )
+)
